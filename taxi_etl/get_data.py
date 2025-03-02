@@ -5,42 +5,48 @@ from tqdm import tqdm
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Tuple
+from .paths import get_data_path
 
 
 def download_nyc_taxi_data(
     year: int = 2023,
-    months: List[int] = None,
+    months: List[int] = [1],
     data_type: str = "yellow",
-    output_dir: str = "data",
+    output_dir: Path = None,
     force_download: bool = False
 ) -> List[str]:
     """
-    Download NYC taxi trip data as parquet files.
+    Download NYC Taxi data for specified year and months.
     
     Args:
-        year: The year of data to download (default: 2023)
-        months: List of months to download (1-12). If None, downloads all months (default: None)
-        data_type: Type of taxi data to download - 'yellow', 'green', or 'fhv' (default: 'yellow')
-        output_dir: Directory to save the downloaded files (default: 'data')
-        force_download: Whether to force download even if file exists (default: False)
+        year: The year to download data for
+        months: List of months to download (1-12). If None, downloads all months.
+        data_type: Type of data to download ('yellow', 'green', or 'fhv')
+        output_dir: Directory to save files to. If None, uses get_volume_path() / 'data'
+        force_download: If True, download even if file exists
         
     Returns:
-        List of paths to downloaded parquet files
+        List of paths to downloaded files
     """
+    if months is None:
+        months = list(range(1, 13))
+    
+    if output_dir is None:
+        output_dir = get_data_path()
+    
+    # Convert to Path object if it's a string
+    output_dir = Path(output_dir)
+    
+    # Create the output directory if it doesn't exist
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
     # Validate inputs
     if data_type not in ["yellow", "green", "fhv"]:
         raise ValueError("data_type must be one of 'yellow', 'green', or 'fhv'")
     
-    if months is None:
-        months = list(range(1, 13))
-    else:
-        for month in months:
-            if month < 1 or month > 12:
-                raise ValueError("Months must be between 1 and 12")
-    
-    # Create output directory if it doesn't exist
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    for month in months:
+        if month < 1 or month > 12:
+            raise ValueError("Months must be between 1 and 12")
     
     # Base URL for NYC TLC trip data
     base_url = "https://d37ci6vzurychx.cloudfront.net/trip-data"
@@ -52,7 +58,7 @@ def download_nyc_taxi_data(
         filename = f"{data_type}_tripdata_{year}-{month:02d}.parquet"
         url = f"{base_url}/{filename}"
         
-        output_file = output_path / filename
+        output_file = output_dir / filename
         
         # Skip if file exists and force_download is False
         if output_file.exists() and not force_download:
@@ -88,19 +94,20 @@ def download_nyc_taxi_data(
 
 def load_taxi_data(file_paths: List[str]) -> pd.DataFrame:
     """
-    Load downloaded taxi data into a pandas DataFrame.
+    Load NYC Taxi data from parquet files.
     
     Args:
-        file_paths: List of paths to parquet files
+        file_paths: List of paths to parquet files (can be str or Path objects)
         
     Returns:
-        pandas DataFrame containing the combined data
+        DataFrame with combined data
     """
     dfs = []
     
     for file_path in tqdm(file_paths, desc="Loading data files"):
         try:
-            df = pd.read_parquet(file_path)
+            # Convert to string in case it's a Path object
+            df = pd.read_parquet(str(file_path))
             dfs.append(df)
         except Exception as e:
             print(f"Error loading {file_path}: {e}")
@@ -111,12 +118,17 @@ def load_taxi_data(file_paths: List[str]) -> pd.DataFrame:
     return pd.concat(dfs, ignore_index=True)
 
 
-if __name__ == "__main__":
-    # Example usage
-    files = download_nyc_taxi_data(year=2023, months=[1, 2], data_type="yellow")
+def get_data() -> pd.DataFrame:
+    files = download_nyc_taxi_data(year=2023, months=[1], data_type="yellow")
     if files:
-        print(f"Downloaded {len(files)} files")
-        
-        # Optionally load the data
-        # df = load_taxi_data(files)
-        # print(f"Loaded data with {len(df)} rows") 
+        return load_taxi_data(files)
+    else:
+        raise ValueError("No data files were successfully loaded")
+    
+
+def view_data():
+    df = get_data()
+    print(df.head())
+
+if __name__ == "__main__":
+    view_data()
