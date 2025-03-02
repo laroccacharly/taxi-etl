@@ -1,0 +1,19 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+## Directory Structure
+
+```
+./
+    env.sh (0 bytes)
+    main.py (86 bytes)
+    print_structure.py (2.6 KB)
+    pyproject.toml (177 bytes)
+    uv.lock (87.1 KB)
+    .cursor/
+        rules/
+            project-structure.mdc (0 bytes)
+```
+

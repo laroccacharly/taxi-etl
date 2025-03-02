@@ -1,0 +1,20 @@
+Don't do something unless I explicitly tell you to. 
+
+# Tooling 
+We use uv to run and install dependencies.
+Don't need to chmod the files, uv will do that.
+Don't generate requirements.txt, uv will do that. 
+
+```bash
+uv run <command>
+```
+To add a package, use uv.
+Dont edit the pyproject.toml file, use uv to add packages.
+```bash
+uv add package
+```
+Dont use bash commands, use uv to run them.
+
+Dataset: NYC Taxi Trips
+A large public dataset containing detailed records of taxi rides in NYC. 
+
