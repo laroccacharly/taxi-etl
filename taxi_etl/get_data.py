@@ -3,17 +3,14 @@ import requests
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
-from datetime import datetime
 from .paths import get_data_path
 from pydantic import BaseModel
-
 
 class TaxiDataRequest(BaseModel):
     year: int = 2023
     month: int = 1  # Only a single month is supported.
     color: str = "yellow"
     output_dir: Path = get_data_path()  
-
 
 def get_data(request: TaxiDataRequest) -> pd.DataFrame:
     """
