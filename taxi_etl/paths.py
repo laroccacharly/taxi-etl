@@ -5,6 +5,8 @@ from .config import is_dev
 
 def get_data_path():
     if is_dev():
-        return Path("data")
+        path = Path("data")
+        path.mkdir(exist_ok=True)  
+        return path
     else:
         return get_volume_path()
